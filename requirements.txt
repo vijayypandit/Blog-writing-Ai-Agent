@@ -1,0 +1,17 @@
+langchain
+langgraph
+langchain-core
+langchain-community
+langchain-openai
+langchain-groq
+langchain-google-genai
+langchain-text-splitters
+langchain-classic
+langchainhub
+langchain-huggingface
+python-dotenv
+ipykernel
+streamlit
+faiss-cpu
+pypdf
+langgraph-checkpoint-postgres
