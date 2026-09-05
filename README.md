@@ -155,6 +155,39 @@ Only evidence URLs passed to the research worker may be cited. If Tavily returns
 
 The basic notebooks collect sections as they finish. The research notebook returns `(task.id, section)` pairs and sorts them in `reducer_node`, so its final order follows the plan.
 
+## Sample Run Explained 🔎
+
+The last notebook cell ran `run("State of LLM developed and live in 2026")`. The returned dictionary shows how the graph completed:
+
+1. **Input**: `run(topic)` creates the initial state with the topic and empty research fields.
+    Example: `topic = "State of LLM developed and live in 2026"`.
+2. **Router**: `router_node` classified the topic as `open_book` and set `needs_research=True` because it asks about current 2026 information.
+    Example: `mode = "open_book"`.
+3. **Research**: `research_node` created several web queries and attempted Tavily searches.
+    Example: `queries = ["Which large language models were released or updated between 2025 and 2026..."]`.
+    In this run, `evidence = []`, so no source URLs were available for grounding.
+4. **Planning**: `orchestrator_node` generated a structured plan with five tasks, including deployment, cost, security, and observability.
+    Example: `Task(id=2, title="Live Deployment Patterns & Serving Infrastructure")`.
+5. **Fan-out**: `fanout` sent each task to a separate `worker_node`.
+    Example: task 2 received its title, goal, bullets, audience, tone, and research evidence.
+6. **Writing**: each worker generated one Markdown section.
+    Example: `sections = [(1, "## Recent Model Releases..."), (2, "## Live Deployment Patterns...")]`.
+7. **Reducing**: `reducer_node` sorted sections by task ID, joined them, and created the final document.
+    Example: `final = "# State of LLM Development and Live Deployment in 2026\\n\\n## Recent Model Releases..."`.
+8. **File output**: the reducer writes the final text to a file named from the blog title and returns it in `out["final"]`.
+
+```mermaid
+flowchart TD
+     A[run topic] --> B[router_node]
+     B --> C[research_node]
+     C --> D[orchestrator_node]
+     D --> E[5 planned tasks]
+     E --> F[worker_node x5]
+     F --> G[sections with task IDs]
+     G --> H[reducer_node]
+     H --> I[final Markdown text and .md file]
+```
+
 ## At a Glance ✅
 
 This repository demonstrates a clear progression: simple orchestration -> better prompting -> typed technical plans -> optional web research and grounded citations. It is intentionally notebook-sized, making each function and graph edge easy to inspect and extend.
