@@ -13,6 +13,7 @@ dependencies = [
     "langchain-groq",
     "langchain-huggingface",
     "langchain-openai",
+    "langchain-tavily>=0.2.18",
     "langchain-text-splitters",
     "langchainhub",
     "langgraph",
@@ -20,4 +21,5 @@ dependencies = [
     "pypdf",
     "python-dotenv",
     "streamlit",
+    "tavily-python>=0.8.1",
 ]

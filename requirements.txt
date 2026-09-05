@@ -9,6 +9,8 @@ langchain-text-splitters
 langchain-classic
 langchainhub
 langchain-huggingface
+langchain-tavily
+tavily-python
 python-dotenv
 ipykernel
 streamlit
