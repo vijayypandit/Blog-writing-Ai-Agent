@@ -12,13 +12,16 @@ from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
 
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
+
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
-print(f"API Key Loaded: {bool(os.getenv('GROQ_API_KEY'))}")
+os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+
 # Keep each response small enough for the Groq TPM budget.
 # ============================================================
 # Blog Writer (Router → (Research?) → Orchestrator → Workers → ReducerWithImages)
