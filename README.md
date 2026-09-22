@@ -1,193 +1,203 @@
-# 📝 Blog Writing Agent
+# 🤖 Technical Blog Writing Agent
 
-A small LangChain + LangGraph workspace that turns a topic into a structured blog plan, writes sections through worker nodes, and saves the final article as Markdown. The notebooks show the workflow evolving from a basic writer into a research-aware technical writing agent.
+An AI assistant built with **LangGraph**, **LangChain**, and **Streamlit** that helps you research, outline, write, and create images for technical blog posts.
 
-## Contents 📚
+Instead of writing an entire article in one big prompt (which often leads to made-up facts or repetitive text), this agent breaks the job down into steps: it checks if web research is needed, creates a detailed outline, writes sections in parallel, adds relevant diagrams/images, and saves everything neatly in Markdown.
 
-- [Project Structure](#project-structure)
-- [Notebook Features](#notebook-features)
-- [Common Workflow](#common-workflow)
-- [Setup and Run](#setup-and-run)
-- [Troubleshooting](#troubleshooting)
+---
 
-## Project Structure
+## 📌 Table of Contents
+
+- [What This Agent Does](#-what-this-agent-does)
+- [How It Works (Flow Diagrams)](#-how-it-works-flow-diagrams)
+- [Models & Services Used](#-models--services-used)
+- [How the Backend Works (`bwa_backend.py`)](#-how-the-backend-works-bwa_backendpy)
+- [The Frontend Dashboard (`bwa_frontend.py`)](#-the-frontend-dashboard-bwa_frontendpy)
+- [Project Structure](#-project-structure)
+- [Getting Started & How to Run](#-getting-started--how-to-run)
+- [Helpful Built-in Protections](#-helpful-built-in-protections)
+
+---
+
+## 💡 What This Agent Does
+
+1. **Smart Routing**: Checks your topic to see if it needs fresh web research (e.g., latest news or pricing) or if it's a timeless concept (like how algorithms work).
+2. **Web Search & Fact Checking**: Uses the Tavily Search API to find real articles, removes duplicate links, and passes real sources to the writer.
+3. **Structured Outline**: Plans the post with titles, target word counts, key bullet points, and notes on where code examples are needed.
+4. **Fast Parallel Writing**: Writes all sections at the same time using worker agents, saving time.
+5. **Clean Section Merging**: Puts the sections back in the correct order based on the initial outline.
+6. **Automatic Diagrams & Images**: Finds where diagrams would help the reader, creates images using Google Gemini (`gemini-2.5-flash-image`), saves them in an `images/` folder, and adds them directly to the Markdown file.
+
+---
+
+## 🏗️ How It Works (Flow Diagrams)
+
+### Main Workflow
+
+```mermaid
+flowchart TD
+    Start([User provides a Topic]) --> Router[1. Router: Needs Web Research?]
+    
+    Router -->|Yes| Research[2. Research: Search Web via Tavily]
+    Router -->|No| Orchestrator[3. Planner: Create Blog Outline]
+    
+    Research --> Orchestrator
+    
+    Orchestrator --> Fanout{Fan-out to Workers}
+    
+    Fanout --> Worker1[Worker writes Section 1]
+    Fanout --> Worker2[Worker writes Section 2]
+    Fanout --> WorkerN[Worker writes Section N]
+    
+    Worker1 --> Reducer[4. Reducer: Merge & Create Images]
+    Worker2 --> Reducer
+    WorkerN --> Reducer
+    
+    Reducer --> FinalOutput([Export Final Markdown + Images])
+```
+
+### Image & Merging Steps
+
+```mermaid
+flowchart LR
+    Merge[Merge Sections in Order] --> Decide[Decide if Images are Needed]
+    Decide --> GenImages[Generate Images with Gemini & Place Links]
+```
+
+---
+
+## 🧠 Models & Services Used
+
+| Feature | Model / Service | What it does |
+| :--- | :--- | :--- |
+| **Main Brain (Default)** | OpenAI `gpt-4.1-mini` | Handles routing, planning, section writing, and image ideas. |
+| **Alternative Brain** | Groq `openai/gpt-oss-120b` | High-speed alternative backend with custom token limits. |
+| **Web Search** | Tavily Search API | Finds accurate links and articles on the internet. |
+| **Image Generator** | Google Gemini (`gemini-2.5-flash-image`) | Creates technical diagrams and visual assets. |
+
+---
+
+## ⚙️ How the Backend Works (`bwa_backend.py`)
+
+The backend is built with LangGraph to coordinate each step and pass data smoothly between tasks.
+
+### 1. The Shared State
+A shared dictionary keeps track of everything as the agent runs:
+
+```python
+class State(TypedDict):
+    topic: str
+    mode: str                  # "closed_book", "hybrid", or "open_book"
+    evidence: List[EvidenceItem]
+    plan: Optional[Plan]
+    sections: Annotated[List[tuple[int, str]], operator.add]  # Collects written sections
+    merged_md: str
+    image_specs: List[dict]
+    final: str
+```
+
+---
+
+### 2. The Main Steps (Nodes)
+
+* **Router (`router_node`)**: Looks at the topic and chooses a mode:
+  * `closed_book`: Evergreen fundamentals (no web search needed).
+  * `hybrid`: General topics that need recent examples (searches recent weeks).
+  * `open_book`: Fast-moving news or updates (searches the last 7 days).
+* **Research (`research_node`)**: Runs Tavily web searches, cleans up duplicate links, and collects verified source URLs.
+* **Planner (`orchestrator_node`)**: Breaks down the topic into 4–8 clear sections with target word counts and goals.
+* **Workers (`worker_node`)**: Each section is assigned to a worker that writes Markdown content, adds required code snippets, and includes links to the research sources.
+* **Reducer Subgraph (`reducer_subgraph`)**:
+  1. Combines all sections in the right order.
+  2. Decides if 1–2 visual diagrams will help explain the topic.
+  3. Uses Google Gemini to generate the images, saves them locally to `./images/`, and inserts them into the document.
+
+---
+
+## 💻 The Frontend Dashboard (`bwa_frontend.py`)
+
+A user-friendly Streamlit web app to run and watch the agent work:
+
+* **Live Progress**: Shows each step updating in real time.
+* **Organized Tabs**:
+  * **Summary**: Word counts, character stats, and routing mode.
+  * **Research**: See the search queries and source links found by Tavily.
+  * **Outline**: View the planned sections, bullet points, and word targets.
+  * **Article Preview**: Read the final post with embedded images and code formatting.
+* **1-Click Download**: Download a `.zip` file containing your `.md` blog post and the generated images.
+
+---
+
+## 📂 Project Structure
 
 ```text
 blog-writing-agent/
-├── _bwa_basic.ipynb
-├── _bwa_improved_prompting.ipynb
-├── _bwa_improvedNew_prompting.ipynb
-├── _bwa_research.ipynb
-├── building_reliable_llm_powered_features_from_prompt_design_to_production_observability.md
-├── designing_a_production_ready_retrieval_augmented_generation_service_with_llms.md
-├── understanding_self_attention_in_transformers_a_comprehensive_guide.md
-├── pyproject.toml
-├── requirements.txt
-└── README.md
+│
+├── bwa_backend.py              # Main LangGraph agent (OpenAI + Gemini + Tavily)
+├── bwa_backend_using_groq.py   # Alternative agent using Groq
+├── bwa_frontend.py             # Streamlit web app
+│
+├── images/                     # Folder where generated diagrams are saved
+├── _bwa_practice_ipynb_codes/  # Jupyter notebooks showing how the project evolved
+│
+├── requirements.txt            # Project dependencies
+├── pyproject.toml              # Environment configuration
+└── README.md                   # Project documentation
 ```
 
-| File | Purpose and added feature |
-| --- | --- |
-| [`_bwa_basic.ipynb`](_bwa_basic.ipynb) | First working graph: plan, fan-out, section workers, reducer, and Markdown output. |
-| [`_bwa_improved_prompting.ipynb`](_bwa_improved_prompting.ipynb) | Stronger prompts, clearer Markdown rules, safer filenames, and a 1,000+ word example. |
-| [`_bwa_improvedNew_prompting.ipynb`](_bwa_improvedNew_prompting.ipynb) | Schema-driven technical writing with audience, tone, goals, bullets, word targets, section types, and a required common-mistakes section. |
-| [`_bwa_research.ipynb`](_bwa_research.ipynb) | Research-aware writing with routing, Tavily search, evidence extraction, citation rules, blog kinds, and deterministic section ordering. |
-| [`pyproject.toml`](pyproject.toml) | Project metadata, Python version (`>=3.14`), and declared dependencies. |
-| [`requirements.txt`](requirements.txt) | Installable dependency list for the notebook environment. |
-| [`understanding_self_attention_in_transformers_a_comprehensive_guide.md`](understanding_self_attention_in_transformers_a_comprehensive_guide.md) | Generated/reference article about self-attention and Transformers. |
-| [`building_reliable_llm_powered_features_from_prompt_design_to_production_observability.md`](building_reliable_llm_powered_features_from_prompt_design_to_production_observability.md) | Research/reference notes on reliable LLM features, prompts, orchestration, observability, and safety. |
-| [`designing_a_production_ready_retrieval_augmented_generation_service_with_llms.md`](designing_a_production_ready_retrieval_augmented_generation_service_with_llms.md) | Research/reference notes on RAG, grounding, latency, cost, and hallucination control. |
-| [`README.md`](README.md) | Project map, feature history, execution flow, setup, and troubleshooting. |
+---
 
-## Notebook Features 🧪
+## 🚀 Getting Started & How to Run
 
-### 1. Basic writer
+### 1. Install Dependencies
 
-The basic notebook defines `Task`, `Plan`, and `State`, then uses `orchestrator`, `fanout`, `worker`, and `reducer` functions. The reducer joins generated sections and saves a lowercase, space-normalized Markdown filename.
+```bash
+# Clone the repository
+git clone https://github.com/vijayypandit/Blog-writing-Ai-Agent.git
+cd Blog-writing-Ai-Agent
 
-```mermaid
-flowchart TD
-    A[Topic] --> B[orchestrator]
-    B --> C[Structured Plan]
-    C --> D[fanout]
-    D --> E[worker per task]
-    E --> F[sections reducer]
-    F --> G[Markdown file]
+# Create and activate a virtual environment
+python -m venv .venv
+# On Windows: .\.venv\Scripts\Activate.ps1
+# On Mac/Linux: source .venv/bin/activate
+
+# Install required packages
+pip install -r requirements.txt
 ```
 
-### 2. Improved prompting
+### 2. Set Up API Keys
 
-This version keeps the same graph but makes planning and section prompts more explicit. It requests Markdown-ready headings, controls the article length, and sanitizes the output filename with a regular expression.
+Create a `.env` file in the main folder with your keys:
 
-```mermaid
-flowchart TD
-    A[Topic] --> B[orchestrator]
-    B --> C[5-7 section Plan]
-    C --> D[fanout tasks]
-    D --> E[Markdown worker sections]
-    E --> F[reducer]
-    F --> G[Sanitized .md output]
+```env
+OPENAI_API_KEY=your_openai_api_key
+GOOGLE_API_KEY=your_gemini_api_key      # For Gemini image generation
+TAVILY_API_KEY=your_tavily_api_key      # For web search
+GROQ_API_KEY=your_groq_api_key          # (Optional) Only needed for Groq backend
 ```
 
-### 3. Structured technical writer
+### 3. Launch the Web App
 
-`_bwa_improvedNew_prompting.ipynb` adds richer task contracts: `goal`, 3-5 `bullets`, `target_words`, and `section_type`. The planner also captures `audience` and `tone`, while workers request code, examples, trade-offs, failure modes, and implementation details where relevant.
-
-```mermaid
-flowchart TD
-    A[Topic] --> B[Technical orchestrator]
-    B --> C[Plan: audience, tone, typed tasks]
-    C --> D[fanout]
-    D --> E[Worker: goal + bullets + word target]
-    E --> F[reducer]
-    F --> G[Technical Markdown article]
+```bash
+streamlit run bwa_frontend.py
 ```
 
-### 4. Research-aware writer
+Open `http://localhost:8501` in your browser, enter a topic, and click **Generate Blog**.
 
-`_bwa_research.ipynb` is the newest feature. `router_node` chooses `closed_book`, `hybrid`, or `open_book`; research-enabled topics call Tavily through `_tavily_search`, normalize and deduplicate evidence, and pass source URLs to the planner and workers. Citation requirements prevent unsupported fresh claims from being presented as facts.
+### 4. Run from Python Code (Optional)
 
-```mermaid
-flowchart TD
-    A[Topic] --> B[router_node]
-    B -->|closed_book| C[orchestrator_node]
-    B -->|hybrid/open_book| D[research_node]
-    D --> E[Tavily search]
-    E --> F[EvidencePack: deduplicated URLs]
-    F --> C
-    C --> G[Plan with research flags]
-    G --> H[fanout]
-    H --> I[worker_node with evidence]
-    I --> J[reducer_node: sort by task id]
-    J --> K[Final cited Markdown]
+```python
+from bwa_backend import app
+
+# Run the agent directly
+result = app.invoke({"topic": "How Vector Databases Work"})
+print(result["final"])
 ```
 
-## Common Workflow 🔄
+---
 
-All versions use the same LangGraph pattern:
+## 🛡️ Helpful Built-in Protections
 
-1. Load environment variables and initialize `ChatGroq`.
-2. Ask the LLM for a structured plan.
-3. Use `Send` to create one worker task per planned section.
-4. Collect section results through an `Annotated` list reducer.
-5. Join sections and write a `.md` file.
-
-The research version adds a router and evidence stage before planning. Its `run(topic)` helper initializes state and invokes the compiled graph.
-
-## Setup and Run 🚀
-
-1. Create a Python 3.14+ environment.
-2. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Add a `.env` file in the project folder:
-
-   ```env
-   GROQ_API_KEY=your_groq_key
-   TAVILY_API_KEY=your_tavily_key
-   ```
-
-   `TAVILY_API_KEY` is needed only when the research notebook routes a topic to web research.
-4. Open a notebook in VS Code, run cells from top to bottom, and invoke its final runner cell. Generated Markdown is written to the notebook's current working directory.
-
-## Troubleshooting 🛠️
-
-**Why does the notebook say the API key is missing?**
-
-Check that `.env` is in the working directory and that the variable name is exactly `GROQ_API_KEY`. Restart the kernel after changing it.
-
-**Why does research fail while basic writing works?**
-
-Confirm `TAVILY_API_KEY` is set and that `langchain-tavily` and `tavily-python` are installed. Closed-book topics can run without Tavily.
-
-**Why is the output file in an unexpected folder?**
-
-The notebooks use `Path.cwd()`. Check the notebook kernel's current working directory before running the final cell.
-
-**Why are citations missing?**
-
-Only evidence URLs passed to the research worker may be cited. If Tavily returns no usable results, the model is instructed to state that sources were not found rather than inventing one.
-
-**Why can section order vary?**
-
-The basic notebooks collect sections as they finish. The research notebook returns `(task.id, section)` pairs and sorts them in `reducer_node`, so its final order follows the plan.
-
-## Sample Run Explained 🔎
-
-The last notebook cell ran `run("State of LLM developed and live in 2026")`. The returned dictionary shows how the graph completed:
-
-1. **Input**: `run(topic)` creates the initial state with the topic and empty research fields.
-    Example: `topic = "State of LLM developed and live in 2026"`.
-2. **Router**: `router_node` classified the topic as `open_book` and set `needs_research=True` because it asks about current 2026 information.
-    Example: `mode = "open_book"`.
-3. **Research**: `research_node` created several web queries and attempted Tavily searches.
-    Example: `queries = ["Which large language models were released or updated between 2025 and 2026..."]`.
-    In this run, `evidence = []`, so no source URLs were available for grounding.
-4. **Planning**: `orchestrator_node` generated a structured plan with five tasks, including deployment, cost, security, and observability.
-    Example: `Task(id=2, title="Live Deployment Patterns & Serving Infrastructure")`.
-5. **Fan-out**: `fanout` sent each task to a separate `worker_node`.
-    Example: task 2 received its title, goal, bullets, audience, tone, and research evidence.
-6. **Writing**: each worker generated one Markdown section.
-    Example: `sections = [(1, "## Recent Model Releases..."), (2, "## Live Deployment Patterns...")]`.
-7. **Reducing**: `reducer_node` sorted sections by task ID, joined them, and created the final document.
-    Example: `final = "# State of LLM Development and Live Deployment in 2026\\n\\n## Recent Model Releases..."`.
-8. **File output**: the reducer writes the final text to a file named from the blog title and returns it in `out["final"]`.
-
-```mermaid
-flowchart TD
-     A[run topic] --> B[router_node]
-     B --> C[research_node]
-     C --> D[orchestrator_node]
-     D --> E[5 planned tasks]
-     E --> F[worker_node x5]
-     F --> G[sections with task IDs]
-     G --> H[reducer_node]
-     H --> I[final Markdown text and .md file]
-```
-
-## At a Glance ✅
-
-This repository demonstrates a clear progression: simple orchestration -> better prompting -> typed technical plans -> optional web research and grounded citations. It is intentionally notebook-sized, making each function and graph edge easy to inspect and extend.
+* **Image Fallback**: If image generation fails or hits an API limit, the agent places a clean note in the Markdown instead of stopping or crashing.
+* **No Fake Citations**: If web search finds no sources, the agent simply writes without citations rather than making up fake links.
+* **Safe Filenames**: File titles are automatically converted into safe names (e.g., `how_vector_databases_work.md`) to avoid saving errors on Windows, Mac, or Linux.
