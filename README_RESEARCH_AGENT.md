@@ -1,6 +1,6 @@
 # Research Agent Guide 🔎
 
-This guide explains [`_bwa_research.ipynb`](_bwa_research.ipynb), the research-aware version of the Blog Writing Agent.
+This guide explains [`blog_practice_ipynb_codes/blog_research.ipynb`](blog_practice_ipynb_codes/blog_research.ipynb), the research-aware version of the Blog Writing Agent.
 
 It is designed for topics where the answer may depend on recent releases, current tools, prices, policies, or market changes. The workflow uses Groq for planning and writing, Tavily for web search, and LangGraph for routing and parallel section generation.
 
@@ -23,7 +23,7 @@ Output:
 - one Markdown section per planned task;
 - a final Markdown article saved to disk.
 
-This notebook does not generate images. For image planning and image fallback behavior, use [`_bwa_with_image.ipynb`](_bwa_with_image.ipynb).
+This notebook does not generate images. For image planning and image fallback behavior, use [`blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb`](blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb).
 
 ## Research Flow Diagram 🧭
 
@@ -327,7 +327,7 @@ If the router returns `closed_book`, the research stage is skipped and the plann
    TAVILY_API_KEY=your_tavily_key
    ```
 
-4. Open [`_bwa_research.ipynb`](_bwa_research.ipynb) in VS Code.
+4. Open [`blog_practice_ipynb_codes/blog_research.ipynb`](blog_practice_ipynb_codes/blog_research.ipynb) in VS Code.
 5. Run the definition cells from top to bottom.
 6. Run the final cell:
 
@@ -384,8 +384,10 @@ The worker may use an illustrative provider URL, incomplete authentication, or a
 
 | File | Purpose |
 | --- | --- |
-| [`_bwa_research.ipynb`](_bwa_research.ipynb) | Research-aware router, Tavily evidence, planner, workers, and reducer. |
-| [`_bwa_with_image.ipynb`](_bwa_with_image.ipynb) | Newer workflow with image planning and image-generation fallback. |
-| [`README_BLOG_WRITING_AGENT.md`](README_BLOG_WRITING_AGENT.md) | Guide to the current image-enabled workflow. |
+| [`blog_practice_ipynb_codes/blog_research.ipynb`](blog_practice_ipynb_codes/blog_research.ipynb) | Research-aware router, Tavily evidence, planner, workers, and reducer. |
+| [`blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb`](blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb) | Newer workflow with image planning and image-generation fallback. |
+| [`README_BLOG_WRITING_AGENT_WITH_IMAGE_GEN.md`](README_BLOG_WRITING_AGENT_WITH_IMAGE_GEN.md) | Guide to the image-enabled workflow. |
+| [`blog_writing_backend.py`](blog_writing_backend.py) | Full production backend (OpenAI + Gemini + Tavily). |
+| [`blog_writing_frontend.py`](blog_writing_frontend.py) | Streamlit dashboard interface. |
 | [`requirements.txt`](requirements.txt) | Python dependencies. |
 | [`pyproject.toml`](pyproject.toml) | Project metadata and dependency declarations. |

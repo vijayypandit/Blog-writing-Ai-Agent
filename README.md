@@ -11,8 +11,8 @@ Instead of writing an entire article in one big prompt (which often leads to mad
 - [What This Agent Does](#-what-this-agent-does)
 - [How It Works (Flow Diagrams)](#-how-it-works-flow-diagrams)
 - [Models & Services Used](#-models--services-used)
-- [How the Backend Works (`bwa_backend.py`)](#-how-the-backend-works-bwa_backendpy)
-- [The Frontend Dashboard (`bwa_frontend.py`)](#-the-frontend-dashboard-bwa_frontendpy)
+- [How the Backend Works (`blog_writing_backend.py`)](#-how-the-backend-works-blog_writing_backendpy)
+- [The Frontend Dashboard (`blog_writing_frontend.py`)](#-the-frontend-dashboard-blog_writing_frontendpy)
 - [Project Structure](#-project-structure)
 - [Getting Started & How to Run](#-getting-started--how-to-run)
 - [Helpful Built-in Protections](#-helpful-built-in-protections)
@@ -70,14 +70,14 @@ flowchart LR
 
 | Feature | Model / Service | What it does |
 | :--- | :--- | :--- |
-| **Main Brain (Default)** | OpenAI `gpt-4.1-mini` | Handles routing, planning, section writing, and image ideas. |
-| **Alternative Brain** | Groq `openai/gpt-oss-120b` | High-speed alternative backend with custom token limits. |
+| **Main Brain (Default)** | OpenAI `gpt-4.1-mini` | Handles routing, planning, section writing, and image ideas in `blog_writing_backend.py`. |
+| **Alternative Brain** | Groq `openai/gpt-oss-120b` | High-speed alternative backend with custom token limits in `blog_backend_using_groq.py`. |
 | **Web Search** | Tavily Search API | Finds accurate links and articles on the internet. |
 | **Image Generator** | Google Gemini (`gemini-2.5-flash-image`) | Creates technical diagrams and visual assets. |
 
 ---
 
-## ⚙️ How the Backend Works (`bwa_backend.py`)
+## ⚙️ How the Backend Works (`blog_writing_backend.py`)
 
 The backend is built with LangGraph to coordinate each step and pass data smoothly between tasks.
 
@@ -114,7 +114,7 @@ class State(TypedDict):
 
 ---
 
-## 💻 The Frontend Dashboard (`bwa_frontend.py`)
+## 💻 The Frontend Dashboard (`blog_writing_frontend.py`)
 
 A user-friendly Streamlit web app to run and watch the agent work:
 
@@ -133,16 +133,22 @@ A user-friendly Streamlit web app to run and watch the agent work:
 ```text
 blog-writing-agent/
 │
-├── bwa_backend.py              # Main LangGraph agent (OpenAI + Gemini + Tavily)
-├── bwa_backend_using_groq.py   # Alternative agent using Groq
-├── bwa_frontend.py             # Streamlit web app
+├── blog_writing_backend.py      # Main LangGraph agent (OpenAI + Gemini + Tavily)
+├── blog_backend_using_groq.py   # Alternative agent using Groq
+├── blog_writing_frontend.py     # Streamlit web app
 │
-├── images/                     # Folder where generated diagrams are saved
-├── _bwa_practice_ipynb_codes/  # Jupyter notebooks showing how the project evolved
+├── images/                      # Folder where generated diagrams are saved
+├── blog_practice_ipynb_codes/   # Jupyter notebooks showing step-by-step evolution
+│   ├── blog_basic.ipynb
+│   ├── blog_improved_prompting.ipynb
+│   ├── blog_improvedNew_prompting.ipynb
+│   ├── blog_research.ipynb
+│   ├── blog_with_image_groqAi.ipynb
+│   └── blog_with_image_original.ipynb
 │
-├── requirements.txt            # Project dependencies
-├── pyproject.toml              # Environment configuration
-└── README.md                   # Project documentation
+├── requirements.txt             # Project dependencies
+├── pyproject.toml               # Environment configuration
+└── README.md                    # Project documentation
 ```
 
 ---
@@ -179,7 +185,7 @@ GROQ_API_KEY=your_groq_api_key          # (Optional) Only needed for Groq backen
 ### 3. Launch the Web App
 
 ```bash
-streamlit run bwa_frontend.py
+streamlit run blog_writing_frontend.py
 ```
 
 Open `http://localhost:8501` in your browser, enter a topic, and click **Generate Blog**.
@@ -187,7 +193,7 @@ Open `http://localhost:8501` in your browser, enter a topic, and click **Generat
 ### 4. Run from Python Code (Optional)
 
 ```python
-from bwa_backend import app
+from blog_writing_backend import app
 
 # Run the agent directly
 result = app.invoke({"topic": "How Vector Databases Work"})

@@ -1,6 +1,6 @@
 # Blog Writing Agent: Current Workflow
 
-This guide explains the current image-enabled blog-writing workflow in [`_bwa_with_image.ipynb`](_bwa_with_image.ipynb).
+This guide explains the image-enabled blog-writing workflow implemented in [`blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb`](blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb) and [`blog_writing_backend.py`](blog_writing_backend.py).
 
 The agent accepts a topic, decides whether research is needed, creates a blog plan, writes sections in parallel, merges the sections, and optionally adds images to the final Markdown file.
 
@@ -121,8 +121,6 @@ Each worker returns a Markdown section such as:
 
 The `sections` list stores the task ID together with the generated Markdown. This allows the reducer to restore the planned order even when workers finish at different times.
 
-The sample showed task 2 with an empty section. This means the workflow completed, but the article is incomplete. Before publishing, check for empty sections and retry or reject them.
-
 ### 5. Final Markdown and images
 
 The reducer joins the non-empty sections into `merged_md`. The image planner then proposes diagrams such as:
@@ -135,7 +133,7 @@ The sample's Gemini image calls failed because the project had a free-tier quota
 
 ## Setup and Run
 
-1. Create a Python 3.14+ environment.
+1. Create a Python 3.10+ environment.
 2. Install the dependencies:
 
    ```bash
@@ -152,7 +150,7 @@ The sample's Gemini image calls failed because the project had a free-tier quota
 
    `TAVILY_API_KEY` is needed for research-enabled topics. `GOOGLE_API_KEY` is needed only for Gemini image generation.
 
-4. Open [`_bwa_with_image.ipynb`](_bwa_with_image.ipynb) in VS Code.
+4. Open [`blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb`](blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb) or [`blog_practice_ipynb_codes/blog_with_image_original.ipynb`](blog_practice_ipynb_codes/blog_with_image_original.ipynb) in VS Code.
 5. Run the notebook definition cells from top to bottom.
 6. Run the final cell with a topic:
 
@@ -179,7 +177,6 @@ If Groq returns `429`, wait for the retry interval before running the topic agai
 - A worker can return an empty section, so inspect `sections` before publishing `final`.
 - Generated code may contain an illustrative endpoint such as `https://api.example.com`; replace it with a real provider endpoint before running it.
 - Gemini image generation is optional and depends on project quota.
-- The earlier notebooks are educational versions. Use [`_bwa_with_image.ipynb`](_bwa_with_image.ipynb) for research routing, image planning, and current token controls.
 
 ## Troubleshooting Q&A
 
@@ -211,10 +208,13 @@ The worker can produce illustrative code. Replace endpoints such as `https://api
 
 | File | Purpose |
 | --- | --- |
-| [`_bwa_with_image.ipynb`](_bwa_with_image.ipynb) | Current research-aware writer with image planning and fallback handling. |
-| [`_bwa_basic.ipynb`](_bwa_basic.ipynb) | Smallest plan, worker, and reducer example. |
-| [`_bwa_improved_prompting.ipynb`](_bwa_improved_prompting.ipynb) | Earlier prompt and Markdown improvements. |
-| [`_bwa_improvedNew_prompting.ipynb`](_bwa_improvedNew_prompting.ipynb) | Earlier typed technical-writing workflow. |
-| [`_bwa_research.ipynb`](_bwa_research.ipynb) | Earlier research-aware workflow without the current image stage. |
+| [`blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb`](blog_practice_ipynb_codes/blog_with_image_groqAi.ipynb) | Research-aware writer with image planning tuned for Groq. |
+| [`blog_practice_ipynb_codes/blog_with_image_original.ipynb`](blog_practice_ipynb_codes/blog_with_image_original.ipynb) | Original image-enabled workflow reference notebook. |
+| [`blog_practice_ipynb_codes/blog_basic.ipynb`](blog_practice_ipynb_codes/blog_basic.ipynb) | Smallest plan, worker, and reducer example. |
+| [`blog_practice_ipynb_codes/blog_improved_prompting.ipynb`](blog_practice_ipynb_codes/blog_improved_prompting.ipynb) | Earlier prompt and Markdown improvements. |
+| [`blog_practice_ipynb_codes/blog_improvedNew_prompting.ipynb`](blog_practice_ipynb_codes/blog_improvedNew_prompting.ipynb) | Earlier typed technical-writing workflow. |
+| [`blog_practice_ipynb_codes/blog_research.ipynb`](blog_practice_ipynb_codes/blog_research.ipynb) | Research-aware workflow without image generation. |
+| [`blog_writing_backend.py`](blog_writing_backend.py) | Full production backend (OpenAI + Gemini + Tavily). |
+| [`blog_writing_frontend.py`](blog_writing_frontend.py) | Streamlit dashboard interface. |
 | [`requirements.txt`](requirements.txt) | Python dependencies. |
 | [`pyproject.toml`](pyproject.toml) | Project metadata and dependency declarations. |
